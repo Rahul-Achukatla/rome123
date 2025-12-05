@@ -1,23 +1,38 @@
-name: Build
+name: Static HTML to Docker
+
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches: ["main"]
+
 jobs:
-  sonarqube:
-    name: SonarQube
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      # Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
-        with:
-          args:>
-            -Dsonar.projectKey=Rahul-Achukatla_rome123
-sonar.organization=rahul-achukatla
-          env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build image
+      - name: Build Docker image
+        run: |
+          docker build -t manikandan1514/cicd-demo:latest .
+
+      # Push image
+      - name: Push Docker image
+        run: |
+          docker push manikandan1514/cicd-demo:latest
+
+      # Echo deployment instructions
+      - name: Deployment notes
+        run: |
+          echo "To deploy locally, run:"
+          echo "docker pull manikandan1514/cicd-demo:latest"
+          echo "docker run -d -p 8080:80 manikandan1514/cicd-demo:latest"
